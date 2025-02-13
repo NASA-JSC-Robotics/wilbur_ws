@@ -1,8 +1,6 @@
-# Sample Containerized Workspace
+# WilbUR Workspace
 
-This empty workspace can be used a starting point for a Docker-enabled VCS or Git Submodules workspace.
-The contents of the `src` directory should be treated similarly to a "normal" ROS workspace.
-That is, source code can be imported and added as needed to `src/`, then be built and run inside of an isolated, ROS enabled environment.
+Workspace for containerized development with the WilbUR robot (Warthog and UR10e).
 
 ## Quick Development Setup
 
