@@ -1,3 +1,6 @@
 [submodule "src/wilbur"]
 	path = src/wilbur
 	url = git@js-er-code.jsc.nasa.gov:imetro/robots/wilbur/wilbur.git
+[submodule "src/rockyard_world"]
+	path = src/rockyard_world
+	url = git@js-er-code.jsc.nasa.gov:imetro/imetro_facility_resources/rockyard_world.git
