@@ -4,3 +4,6 @@
 [submodule "src/rockyard_world"]
 	path = src/rockyard_world
 	url = git@js-er-code.jsc.nasa.gov:imetro/imetro_facility_resources/rockyard_world.git
+[submodule "src/drt_ros2_ur_tools"]
+	path = src/drt_ros2_ur_tools
+	url = git@js-er-code.jsc.nasa.gov:imetro/drt_ros2_ur_tools.git
