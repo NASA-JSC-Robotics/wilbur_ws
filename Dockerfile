@@ -99,6 +99,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     . /opt/ros/${ROS_DISTRO}/setup.bash && \
     rosdep update --rosdistro ${ROS_DISTRO}
 
+# For Gazebo fortress model files
+ENV IGN_GAZEBO_RESOURCE_PATH /opt/ros/${ROS_DISTRO}/share
+
 # Setup entrypoint
 COPY scripts/entrypoint.sh /entrypoint.sh
 RUN echo "source /entrypoint.sh" >> ~/.bashrc
