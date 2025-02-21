@@ -43,6 +43,10 @@ docker compose exec dev bash
 Once you're attached to the container, you can use it as a regular colcon workspace.
 The contents of the `src/` directory will be mounted into `/home/er4-user/ws/src`.
 
+### Launching the Wilbur Simulations
+
+For more information refer to the [wilbur_deploy README](src/wilbur/wilbur_deploy/README.md).
+
 ### Other Things to Note
 
 - Build logs, compiled artifaces, and the `.ccache` are also mounted in the workspace/user home.
