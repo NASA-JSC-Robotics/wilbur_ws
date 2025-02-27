@@ -27,12 +27,27 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     gdb \
     gdbserver \
     git \
+    ipython3 \
+    nano \
     python3-colcon-clean \
     python3-colcon-common-extensions \
     python3-colcon-mixin \
     python3-pip \
     python3-rosdep \
     python3-vcstool \
+    ros-humble-rqt-action \
+    ros-humble-rqt-tf-tree \
+    ros-humble-rqt-bag \
+    ros-humble-rqt-bag-plugins \
+    ros-humble-rqt-common-plugins \
+    ros-humble-rqt-controller-manager \
+    ros-humble-rqt-dotgraph \
+    ros-humble-rqt-msg \
+    ros-humble-plotjuggler \
+    ros-humble-rqt-py-console \
+    ros-humble-rqt-service-caller \
+    ros-humble-rqt-srv \
+    ros-humble-rqt-tf-tree \
     software-properties-common \
     terminator \
     tmux \
