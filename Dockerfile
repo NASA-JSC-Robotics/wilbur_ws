@@ -107,6 +107,10 @@ RUN colcon metadata add default  \
 
 COPY config/colcon-defaults.yaml /home/${USERNAME}/.colcon/defaults.yaml
 
+# aliases
+COPY config/helpful_alias.sh /home/${USERNAME}/helpful_alias.sh
+RUN cat /home/${USERNAME}/helpful_alias.sh >> /home/${USERNAME}/.bashrc
+
 # Fix rosdep permissions and ensure sudo while we're at it
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
