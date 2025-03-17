@@ -4,22 +4,29 @@ Workspace for containerized development with the WilbUR robot (Warthog and UR10e
 
 ## Running Wilbury things
 
-*Note - I don't know why I cant use the iMarker in Rviz for mock_hardware versions. You can still change the joints from the joints tab of the MotionPlanning panel, and it will work as expected. The iMarker does work for gazebo things.
+*Note* - I don't know why I can't use the iMarker in Rviz for mock_hardware versions.
+You can still change the joints from the joints tab of the MotionPlanning panel, and it will work as expected.
+The iMarker does work for gazebo things.
 
-Run Wilbur with `mock_hardware` implemented with just one controller manager to display in Rviz 
+Run Wilbur with `mock_hardware` implemented with just one controller manager to display in Rviz
+
 ```bash
-ros2 launch wilbur_deploy control_mock_hardware.launch.py 
+ros2 launch wilbur_deploy control_mock_hardware.launch.py
 ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
 ```
 
 Run Wilbur with `mock_hardware` implemented with one controller manager for the warthog and one controller manager for the UR.
-This is to test for when we have HPSC running the UR alone. Note that for sim, we are still launching the UR launch files, so those will need to be separated in the future. Note that in this case, you must change the controller name in `wilbur_moveit_config/config/moveit_controllers.yaml` from `joint_trajectory_controller` to `/ur/joint_trajectory_controller` for moveit to execute plans in this version.
+This is to test for when we have HPSC running the UR alone.
+Note that for sim, we are still launching the UR launch files, so those will need to be separated in the future.
+Note that in this case, you must change the controller name in `wilbur_moveit_config/config/moveit_controllers.yaml` from `joint_trajectory_controller` to `/ur/joint_trajectory_controller` for moveit to execute plans in this version.
+
 ```bash
 ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true
 ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
 ```
 
 Run Wilbur with in ignition. This should launch ignition with all of the necessary components.
+
 ```bash
 ros2 launch wilbur_gz sim_gz.launch.py
 ros2 launch wilbur_moveit_config wilbur_moveit.launch.py sim_ignition:=true
