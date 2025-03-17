@@ -2,8 +2,10 @@
 	path = src/wilbur
 	url = git@js-er-code.jsc.nasa.gov:imetro/robots/wilbur/wilbur.git
 [submodule "src/rockyard_world"]
-	path = src/rockyard_world
+	path = src/jsc_rockyard_world_gz
 	url = git@js-er-code.jsc.nasa.gov:imetro/imetro_facility_resources/rockyard_world.git
 [submodule "src/drt_ros2_ur_tools"]
 	path = src/drt_ros2_ur_tools
 	url = git@js-er-code.jsc.nasa.gov:imetro/drt_ros2_ur_tools.git
+[submodule "src/jsc_rockyard_world_gz/"]
+	url = git@js-er-code.jsc.nasa.gov:imetro/imetro_facility_resources/jsc_rockyard_world_gz.git
