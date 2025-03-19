@@ -24,10 +24,14 @@ This is because we are still including UR launch files, which do not support spa
 To run Wilbur with `mock_hardware` and one controller manager for the warthog and one controller manager for the UR:
 
 ```bash
-# Launches namepsaced controller managers
+# Launches the warthog only
 ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true
 
+# Launches the namespace UR only
+ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true launch_ur:=true
+
 # Starts moveit and opens and rviz window for planning and execution
+# NOTE: Refer to the README in wilbur_deploy for any caveats here, this may not work out of the box.
 ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
 ```
 
