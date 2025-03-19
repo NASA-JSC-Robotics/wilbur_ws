@@ -27,12 +27,27 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     gdb \
     gdbserver \
     git \
+    ipython3 \
+    nano \
     python3-colcon-clean \
     python3-colcon-common-extensions \
     python3-colcon-mixin \
     python3-pip \
     python3-rosdep \
     python3-vcstool \
+    ros-humble-rqt-action \
+    ros-humble-rqt-tf-tree \
+    ros-humble-rqt-bag \
+    ros-humble-rqt-bag-plugins \
+    ros-humble-rqt-common-plugins \
+    ros-humble-rqt-controller-manager \
+    ros-humble-rqt-dotgraph \
+    ros-humble-rqt-msg \
+    ros-humble-plotjuggler \
+    ros-humble-rqt-py-console \
+    ros-humble-rqt-service-caller \
+    ros-humble-rqt-srv \
+    ros-humble-rqt-tf-tree \
     software-properties-common \
     terminator \
     tmux \
@@ -92,12 +107,19 @@ RUN colcon metadata add default  \
 
 COPY config/colcon-defaults.yaml /home/${USERNAME}/.colcon/defaults.yaml
 
+# aliases
+COPY config/helpful_alias.sh /home/${USERNAME}/helpful_alias.sh
+RUN cat /home/${USERNAME}/helpful_alias.sh >> /home/${USERNAME}/.bashrc
+
 # Fix rosdep permissions and ensure sudo while we're at it
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     sudo apt update && \
     . /opt/ros/${ROS_DISTRO}/setup.bash && \
     rosdep update --rosdistro ${ROS_DISTRO}
+
+# For Gazebo fortress model files
+ENV IGN_GAZEBO_RESOURCE_PATH /opt/ros/${ROS_DISTRO}/share
 
 # Setup entrypoint
 COPY scripts/entrypoint.sh /entrypoint.sh
