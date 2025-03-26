@@ -46,6 +46,14 @@ ros2 launch wilbur_moveit_config wilbur_moveit.launch.py sim_ignition:=true
 ros2 topic pub /cmd_vel_unstamped geometry_msgs/msg/Twist "{linear: {x: 1.0}}" -r 5
 ```
 
+*NOTE:* Ogre2 rendering may have issues in VMs on mac for Gazebo.
+This can be addressed either by changing the rendering (hard) or just by running with software:
+
+```bash
+# Use CPU for rendering, it might be slow but it should work
+LIBGL_ALWAYS_SOFTWARE=1 ros2 launch wilbur_gz sim_gz.launch.py
+```
+
 ## Quick Development Setup
 
 1) [Install Docker](https://docs.docker.com/engine/install/ubuntu/)
