@@ -59,10 +59,18 @@ LIBGL_ALWAYS_SOFTWARE=1 ros2 launch wilbur_gz sim_gz.launch.py
 1) [Install Docker](https://docs.docker.com/engine/install/ubuntu/)
     - Don't worry about Docker Desktop
     - For Ubuntu recommend using the [utility script](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script)
-2) Fork or copy the contents of this repository as needed
-3) Setup your source code for the `src/` directory
-    - Either with git submodules (`git submodule add ...`)
-    - Or with a repos file and vcs tool  (`vcs import ...`)
+2) Clone this repo with submodules by including the recursive option
+
+    ```bash
+    git clone --recursive git@js-er-code.jsc.nasa.gov:imetro/robots/wilbur/wilbur-ws.git
+    ```
+
+3) If not cloned with submodules, update with
+
+    ```bash
+    git submodule update --init
+    ```
+
 4) Set your user information for the project build
     - We recommend just putting this in your `~/.bashrc`:
 
