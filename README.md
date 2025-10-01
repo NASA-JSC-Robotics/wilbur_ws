@@ -54,6 +54,12 @@ This can be addressed either by changing the rendering (hard) or just by running
 LIBGL_ALWAYS_SOFTWARE=1 ros2 launch wilbur_gz sim_gz.launch.py
 ```
 
+## Launching the Wilbur Simulations
+
+For more information refer to the [wilbur_deploy README](src/wilbur/wilbur_deploy/README.md).
+
+# Documentation for ros_docker_ws
+
 ## Quick Development Setup
 
 1) [Install Docker](https://docs.docker.com/engine/install/ubuntu/)
@@ -103,21 +109,21 @@ docker compose exec dev bash
 Once you're attached to the container, you can use it as a regular colcon workspace.
 The contents of the `src/` directory will be mounted into `/home/er4-user/ws/src`.
 
-### Launching the Wilbur Simulations
-
-For more information refer to the [wilbur_deploy README](src/wilbur/wilbur_deploy/README.md).
-
-### Other Things to Note
+## Other Things to Note
 
 - Build logs, compiled artifaces, and the `.ccache` are also mounted in the workspace/user home.
 This ensure artifacts are persisted even when restarting or recreating the container.
+
+- The `.bash` folder gets mounted into your workspace, and the environment variable `HISTFILE` is set in the docker compose file.
+This points the bash to keep the history in this folder, which will persist between docker container sessions so that your history is kept.
 
 - Your host's DDS configuration (either cyclone or fastrtps) will be mounted into the image if set in your environment.
 For more information refer to the [compose specification](docker-compose.yaml).
 
 - Defaults for `colcon build` are set for the user. To change or modify, refer to the [defaults file](config/colcon-defaults.yaml).
 
-- Two samples for GitLab CI for either [git submodules](.gitlab-ci.yml.submodules) or [vcs workspace](gitlab-ci.yml.vcs) are included.
-Depending on your workflow, pick on and move it to `.gitlab-ci.yml` and it should build and push images, and run tests.
-  - *NOTE:* There MUST be a `project.repos` file in the repo root to work with the VCS CI template.
-  - *NOTE:* Images are tagged based on the repo's name/location and either the tag or branch of an MR.
+- We use [MuJoCo](https://mujoco.readthedocs.io/en/stable/XMLreference.html) for many of our dynamic simulations, so we include installing in the [Dockerfile](./Dockerfile).
+
+## Troubleshooting
+
+Common pitfalls and troubleshooting tips are documented in the [troubleshooting guide](./docs/TROUBLESHOOTING.md).
