@@ -18,3 +18,6 @@
 [submodule "src/dextivr_hande"]
 	path = src/dextivr_hande
 	url = git@js-er-code.jsc.nasa.gov:hw-toolbox/robotiq/ros2/dextivr_hande.git
+[submodule "src/mujoco_ros2_simulation"]
+	path = src/mujoco_ros2_simulation
+	url = git@github.com:NASA-JSC-Robotics/mujoco_ros2_simulation.git
