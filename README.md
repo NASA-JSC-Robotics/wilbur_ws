@@ -35,15 +35,17 @@ ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:
 ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
 ```
 
-Run Wilbur with in ignition.
-This should launch ignition with all of the necessary components.
+Run Wilbur with mujoco
 
 ```bash
-ros2 launch wilbur_gz sim_gz.launch.py
-ros2 launch wilbur_moveit_config wilbur_moveit.launch.py sim_ignition:=true
+# launch wilbur mujoco sim
+ros2 launch wilbur_mujoco_config wilbur_mujoco.launch.py 
 
-# make the warthog drive forward!
-ros2 topic pub /cmd_vel_unstamped geometry_msgs/msg/Twist "{linear: {x: 1.0}}" -r 5
+# this is setup to use if a ps4 controller is connected to your linux device
+ros2 launch wilbur_deploy teleop.launch.py use_sim_time:=true
+
+# I know its not sim_ignition, just how flags were for now...
+ros2 launch wilbur_moveit_config wilbur_moveit.launch.py sim_ignition:=true 
 ```
 
 *NOTE:* Ogre2 rendering may have issues in VMs on mac for Gazebo.
