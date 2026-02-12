@@ -1,5 +1,5 @@
-# Set desired ROS distribution, this image currently only supports humble.
-ARG ROS_DISTRO=humble
+# Set desired ROS distribution, this image currently only supports jazzy.
+ARG ROS_DISTRO=jazzy
 
 # This layer grabs package manifests from the src directory for preserving rosdep installs.
 # This can significantly speed up rebuilds for the base package when src contents have changed.
@@ -18,8 +18,9 @@ FROM ros:${ROS_DISTRO} AS er4-dev
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Overridable non root user information, this can be annoying for non humble ROS base images, which
-# may already have a non-root user created.
+# Starting with Ubuntu 24.04, the default Ubuntu image already contains a non-root "ubuntu" user
+# with uid 1000. Our options are to delete the user and try to recreate it, or to rename it.
+# Since ownership is by UID rather than by user name, renaming is not so bad.
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=er4-user
@@ -48,19 +49,19 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     python3-pip \
     python3-rosdep \
     python3-vcstool \
-    ros-humble-rqt-action \
-    ros-humble-rqt-tf-tree \
-    ros-humble-rqt-bag \
-    ros-humble-rqt-bag-plugins \
-    ros-humble-rqt-common-plugins \
-    ros-humble-rqt-controller-manager \
-    ros-humble-rqt-dotgraph \
-    ros-humble-rqt-msg \
-    ros-humble-plotjuggler \
-    ros-humble-rqt-py-console \
-    ros-humble-rqt-service-caller \
-    ros-humble-rqt-srv \
-    ros-humble-rqt-tf-tree \
+    ros-${ROS_DISTRO}-rqt-action \
+    ros-${ROS_DISTRO}-rqt-tf-tree \
+    ros-${ROS_DISTRO}-rqt-bag \
+    ros-${ROS_DISTRO}-rqt-bag-plugins \
+    ros-${ROS_DISTRO}-rqt-common-plugins \
+    ros-${ROS_DISTRO}-rqt-controller-manager \
+    ros-${ROS_DISTRO}-rqt-dotgraph \
+    ros-${ROS_DISTRO}-rqt-msg \
+    ros-${ROS_DISTRO}-plotjuggler \
+    ros-${ROS_DISTRO}-rqt-py-console \
+    ros-${ROS_DISTRO}-rqt-service-caller \
+    ros-${ROS_DISTRO}-rqt-srv \
+    ros-${ROS_DISTRO}-rqt-tf-tree \
     software-properties-common \
     terminator \
     tmux \
@@ -69,6 +70,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     wget
 
 # Add a non-root user with provided user details
+RUN if id -u ${USER_UID}; then userdel -r $(id -un ${USER_UID}); fi \
+    && if id -g ${USER_GID}; then groupdel $(id -gn ${USER_GID}); fi
+
 RUN groupadd -g ${USER_GID} ${USERNAME} \
     && useradd -l -u ${USER_UID} -g ${USER_GID} --create-home -m -s /bin/bash -G sudo,adm,dialout,dip,plugdev,video ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
@@ -104,7 +108,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -q -y \
     ros-${ROS_DISTRO}-ros2controlcli \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
-    ros-${ROS_DISTRO}-rmw-fastrtps-cpp
+    ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
+    python3-virtualenv
 
 # Configure and install MuJoCo using the defaults for the MuJoCo drivers.
 # We use MuJoCo in many systems so we just install the drivers in the base workspace.
@@ -118,21 +123,36 @@ RUN CPU_ARCH=$(uname -m); \
     tar -xzf "mujoco-${MUJOCO_VERSION}-linux-${CPU_ARCH}.tar.gz" -C $(dirname "${MUJOCO_DIR}") && \
     rm "mujoco-${MUJOCO_VERSION}-linux-${CPU_ARCH}.tar.gz"
 
-# Install MuJoCo specific pip dependencies
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    pip install mujoco obj2mjcf
-
-# There's no build for arm64 on linux, so just ignore failures here if that's the case
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    pip install bpy==4.0.0 --extra-index-url https://download.blender.org/pypi/ || true
-
 # Copy in the remainder of the src directory
 COPY src/ src/
 RUN chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
+ENV VENV=/home/${USERNAME}/colcon_venv
 USER ${USERNAME}
+# Starting with python 3.11, pip installs need to go into a python virtualenv
+# The setup here is based on the ROS2 docs at
+# https://docs.ros.org/en/jazzy/How-To-Guides/Using-Python-Packages.html
+# The python virtualenv will be based at ~/colcon_venv. 
+# We'll set up the bashrc to use it. We want the venv to be sourced
+# first, before sourcing the ROS workspace.
+RUN mkdir -p ${VENV}/src \
+    && cd ${VENV} \
+    && virtualenv -p python3 --system-site-packages ./venv \
+    && touch ./venv/COLCON_IGNORE \
+    && echo 'source ${VENV}/venv/bin/activate' >> /home/${USERNAME}/.bashrc
+
+# Install MuJoCo specific pip dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    source ${VENV}/venv/bin/activate \
+    && pip install mujoco obj2mjcf
+
+# There's no build for arm64 on linux, so just ignore failures here if that's the case
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    source ${VENV}/venv/bin/activate \
+    && pip install bpy==4.0.0 --extra-index-url https://download.blender.org/pypi/ || true
+
 
 # Setup colcon default mixins and add default settings
 RUN colcon mixin add default \
