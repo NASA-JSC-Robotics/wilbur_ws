@@ -62,6 +62,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ros-${ROS_DISTRO}-rqt-service-caller \
     ros-${ROS_DISTRO}-rqt-srv \
     ros-${ROS_DISTRO}-rqt-tf-tree \
+    ros-${ROS_DISTRO}-desktop \
     software-properties-common \
     terminator \
     tmux \
@@ -90,6 +91,9 @@ RUN mkdir src build install log
 
 # Copy package manifests for installing rosdeps
 COPY --chown=${USERNAME}:${USERNAME} --from=package-manifests /src/ ./src
+
+# FIXME: Move wilbur's wilbur_gz out of the way because the gazebo deps don't work on jazzy
+RUN mv src/wilbur/wilbur_gz/package.xml src/wilbur/wilbur_gz/__package.xml
 
 # Install rosdeps
 # Init is unnecessary if using the ROS base image
