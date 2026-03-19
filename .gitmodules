@@ -14,7 +14,7 @@
 	url = git@js-er-code.jsc.nasa.gov:hw-toolbox/robotiq/ros2/fm/serial.git
 [submodule "src/ros2_robotiq_gripper"]
 	path = src/ros2_robotiq_gripper
-	url = git@js-er-code.jsc.nasa.gov:hw-toolbox/robotiq/ros2/fm/ros2_robotiq_gripper.git
+	url = https://github.com/NASA-JSC-Robotics/ros2_robotiq_gripper
 [submodule "src/dextivr_hande"]
 	path = src/dextivr_hande
 	url = git@js-er-code.jsc.nasa.gov:hw-toolbox/robotiq/ros2/dextivr_hande.git
