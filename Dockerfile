@@ -20,14 +20,14 @@ RUN find /src -type f ! -name "package.xml" ! -name "COLCON_IGNORE" -delete && \
 RUN mkdir -p /src
 
 # Using the pre-compiled ROS images as the base.
-FROM ros:${ROS_DISTRO} AS er4-dev-base
+FROM ros:${ROS_DISTRO} AS er4-dev
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Starting with Ubuntu 24.04, the default Ubuntu image already contains a non-root "ubuntu" user
-# with uid 1000. Our options are to delete the user and try to recreate it, or to rename it.
-# Since ownership is by UID rather than by user name, renaming is not so bad.
+# Overridable non root user information.
+ARG USER_UID=1000
 ARG USER_GID=1000
+ARG USERNAME=er4-user
 
 # Define the install location for the developing application
 ENV ER4_WS="/home/er4-user/ws"
@@ -80,10 +80,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     xterm \
     wget
 
-# Add a non-root user with provided user details
-RUN if id -u ${USER_UID}; then userdel -r $(id -un ${USER_UID}); fi \
-    && if id -g ${USER_GID}; then groupdel $(id -gn ${USER_GID}); fi
-
+# Add a non-root user with provided user details. Some images have a default `ubuntu` user, so we remove it before adding the
+# new one.
+RUN userdel -r ubuntu 2>/dev/null || true
 RUN groupadd -g ${USER_GID} ${USERNAME} \
     && useradd -l -u ${USER_UID} -g ${USER_GID} --create-home -m -s /bin/bash -G sudo,adm,dialout,dip,plugdev,video ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
@@ -163,40 +162,8 @@ RUN echo "PS1=\"${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Images built in CI will have the default UID of 1000. For deployment, we'd like the user in the
-# container to match the host user. This requires customizing the setup above.
-FROM er4-dev-base AS er4-dev
-ARG USERNAME
-ARG USER_UID
-ARG USER_GID
-
-USER root
-# We first update anything in the base image to match the UID/GID specified by the build,
-# the username should always stay the same as the base image. The intent here is to provide
-# a way for developers to share code between the container and host, in a way that doesn't
-# require any id mapping. This is only necessary for the release image which may use pre-
-# compiled images where the image's user DOESN'T match the hosts (UID/GID != 1000).
-#
-# Additionally, Usermod does some weird shenanigans trying to change the whole host system.
-# Weonly care about the users home directory, so to speed things up, just change the passwd
-# and groups manually then update the user. Further, we parallelize execution of the chown
-# to speed that up on host machines. Ultimate this isn't critical, because we mount the
-# workspace over the source. But it is simpler and safer than piecemealing things as
-# needed, it is also significantly faster than `usermod`.
-RUN OLD_UID=$(id -u ${USERNAME}) && \
-    OLD_GID=$(id -g ${USERNAME}) && \
-    if [ "${OLD_UID}" != "${USER_UID}" ] || [ "${OLD_GID}" != "${USER_GID}" ]; then \
-        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:[^:]*:/\1${USER_UID}:${USER_GID}:/" /etc/passwd && \
-        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:/\1${USER_GID}:/" /etc/group && \
-        find /home/${USERNAME} \
-            \( -user ${OLD_UID} -o -group ${OLD_GID} \) \
-            -print0 | xargs -0 -P $(nproc) -n 1000 chown ${USER_UID}:${USER_GID}; \
-    fi
-
-USER ${USERNAME}
-
 # Source built dev image for automated testing.
-FROM er4-dev-base AS er4-dev-source
+FROM er4-dev AS er4-dev-source
 
 ARG USERNAME
 
