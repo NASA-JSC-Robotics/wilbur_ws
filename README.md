@@ -1,77 +1,6 @@
 # WilbUR Workspace
 
-<<<<<<< HEAD
 Workspace for containerized development with the WilbUR robot (Warthog and UR10e).
-
-## Running Wilbury things
-
-To run Wilbur with `mock_hardware` and a single controller manager:
-
-```bash
-# Launches the mock hardware simulated controller interface
-ros2 launch wilbur_deploy control_mock_hardware.launch.py
-
-# Starts moveit and opens and rviz window for planning and execution
-ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
-```
-
-For the LUCCI demonstration, we can split the controller managers and run one for the warthog and one for the UR.
-This allows us to launch controller managers in a potentially distributed manner on multiple PCs.
-This is to test running the HSPC as the control computer for either robot.
-
-Note that in this case, you must change the controller name in `wilbur_moveit_config/config/moveit_controllers.yaml` from `joint_trajectory_controller` to `/ur/joint_trajectory_controller` for moveit to execute plans in this version.
-This is because we are still including UR launch files, which do not support spawning controllers in the way we need to.
-
-To run Wilbur with `mock_hardware` and one controller manager for the warthog and one controller manager for the UR:
-
-```bash
-# Launches the warthog only
-ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true
-
-# Launches the namespace UR only
-ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true launch_ur:=true
-
-# Starts moveit and opens and rviz window for planning and execution
-# NOTE: Refer to the README in wilbur_deploy for any caveats here, this may not work out of the box.
-ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
-```
-
-Run Wilbur with mujoco
-
-```bash
-# launch wilbur mujoco sim
-ros2 launch wilbur_mujoco_config wilbur_mujoco.launch.py
-
-# this is setup to use if a ps4 controller is connected to your linux device
-ros2 launch wilbur_deploy teleop.launch.py use_sim_time:=true
-
-# I know its not sim_ignition, just how flags were for now...
-ros2 launch wilbur_moveit_config wilbur_moveit.launch.py sim_ignition:=true
-```
-
-*NOTE:* Ogre2 rendering may have issues in VMs on mac for Gazebo.
-This can be addressed either by changing the rendering (hard) or just by running with software:
-
-```bash
-# Use CPU for rendering, it might be slow but it should work
-LIBGL_ALWAYS_SOFTWARE=1 ros2 launch wilbur_gz sim_gz.launch.py
-```
-
-## Launching the Wilbur Simulations
-
-For more information refer to the [wilbur_deploy README](src/wilbur/wilbur_deploy/README.md).
-
-# Documentation for ros_docker_ws
-=======
-This empty workspace can be used a starting point for a Docker-enabled workspace using Git submodules.
-Users can use this as a starting point for containerized ROS 2 applications.
-Start by forking or copying the contents of this project, and modifying as needed!
-
-The contents of the `src` directory should be treated similarly to a "normal" ROS workspace.
-That is, source code can be added, submoduled, or imported as needed to `src/`, then be built and run inside of an isolated, ROS enabled environment.
-
-This workflow supports the `jazzy` ROS distro.
->>>>>>> up/main
 
 ## Quick Development Setup
 
@@ -87,25 +16,13 @@ This workflow supports the `jazzy` ROS distro.
 1) [Install Docker](https://docs.docker.com/engine/install/ubuntu/)
     - Don't worry about Docker Desktop
     - For Ubuntu recommend using the [utility script](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script)
-<<<<<<< HEAD
-2) Clone this repo with submodules by including the recursive option
 
-    ```bash
-    git clone --recursive git@js-er-code.jsc.nasa.gov:imetro/robots/wilbur/wilbur-ws.git
-    ```
-
-3) If not cloned with submodules, update with
-
-    ```bash
-    git submodule update --init
-=======
 2) Fork or copy the contents of this repository as needed
 
 3) Copy `.env.default` in the root of this repo to a new file named just `.env`
 
     ```bash
     cp .env.default .env
->>>>>>> up/main
     ```
 
 4) Set your user information for the project build
@@ -174,7 +91,68 @@ source install/setup.bash
 
 Once the workspace is built and sourced within the container, ROS 2 executables and launch files can be run.
 
+## Running Wilbury things
+
+To run Wilbur with `mock_hardware` and a single controller manager:
+
+```bash
+# Launches the mock hardware simulated controller interface
+ros2 launch wilbur_deploy control_mock_hardware.launch.py
+
+# Starts moveit and opens and rviz window for planning and execution
+ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
+```
+
+For the LUCCI demonstration, we can split the controller managers and run one for the warthog and one for the UR.
+This allows us to launch controller managers in a potentially distributed manner on multiple PCs.
+This is to test running the HSPC as the control computer for either robot.
+
+Note that in this case, you must change the controller name in `wilbur_moveit_config/config/moveit_controllers.yaml` from `joint_trajectory_controller` to `/ur/joint_trajectory_controller` for moveit to execute plans in this version.
+This is because we are still including UR launch files, which do not support spawning controllers in the way we need to.
+
+To run Wilbur with `mock_hardware` and one controller manager for the warthog and one controller manager for the UR:
+
+```bash
+# Launches the warthog only
+ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true
+
+# Launches the namespace UR only
+ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true launch_ur:=true
+
+# Starts moveit and opens and rviz window for planning and execution
+# NOTE: Refer to the README in wilbur_deploy for any caveats here, this may not work out of the box.
+ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
+```
+
+Run Wilbur with mujoco
+
+```bash
+# launch wilbur mujoco sim
+ros2 launch wilbur_mujoco_config wilbur_mujoco.launch.py
+
+# this is setup to use if a ps4 controller is connected to your linux device
+ros2 launch wilbur_deploy teleop.launch.py use_sim_time:=true
+
+# I know its not sim_ignition, just how flags were for now...
+ros2 launch wilbur_moveit_config wilbur_moveit.launch.py sim_ignition:=true
+```
+
+*NOTE:* Ogre2 rendering may have issues in VMs on mac for Gazebo.
+This can be addressed either by changing the rendering (hard) or just by running with software:
+
+```bash
+# Use CPU for rendering, it might be slow but it should work
+LIBGL_ALWAYS_SOFTWARE=1 ros2 launch wilbur_gz sim_gz.launch.py
+```
+
+## Launching the Wilbur Simulations
+
+For more information refer to the [wilbur_deploy README](src/wilbur/wilbur_deploy/README.md).
+
 ## The Pixi Workflow
+
+> [!WARNING] This is not supported at the moment.
+> This will not work with Clearpath Debians until it is fixed.
 
 We also provide a [pixi/robostack](https://prefix.dev) build for compiling on baremetal in consistent, isolated environments.
 Be sure to install the latest (after 0.65.0) release of the tool.
