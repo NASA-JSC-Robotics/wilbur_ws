@@ -1,5 +1,11 @@
-# Set desired ROS distribution, this image currently only supports jazzy.
+# Set desired ROS distribution
 ARG ROS_DISTRO=jazzy
+
+# The base image for the overlay deployment
+# These must be overridden from the local .env if using this workflow.
+ARG ROS_WS_BASE_IMAGE_TAG="jazzy-devel"
+ARG ROS_WS_BASE_IMAGE="js-er-code.jsc.nasa.gov:5005/imetro/robots/wilbur/wilbur_ws"
+ARG ROS_WS_BASE_IMAGE="${ROS_WS_BASE_IMAGE}:${ROS_WS_BASE_IMAGE_TAG}"
 
 # This layer grabs package manifests from the src directory for preserving rosdep installs.
 # This can significantly speed up rebuilds for the base package when src contents have changed.
@@ -21,15 +27,19 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Starting with Ubuntu 24.04, the default Ubuntu image already contains a non-root "ubuntu" user
 # with uid 1000. Our options are to delete the user and try to recreate it, or to rename it.
 # Since ownership is by UID rather than by user name, renaming is not so bad.
-ARG USER_UID=1000
 ARG USER_GID=1000
-ARG USERNAME=er4-user
 
 # Define the install location for the developing application
 ENV ER4_WS="/home/er4-user/ws"
 
 # DEBIAN_FRONTEND is set as an ARG instead of ENV variable so it doesn't persist in the image after build
 ARG DEBIAN_FRONTEND=noninteractive
+
+# As of 24.04, many Ubuntu modules will check for FIPS kernels and adjust packages accordingly. This
+# can break in the container, which shares a kernel but does not have FIPS packages installed. So
+# in the running image we ensure that SSL at does not cause problems when downloading or making
+# secure connections during the build.
+ENV OPENSSL_FORCE_FIPS_MODE=0
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -78,16 +88,20 @@ RUN groupadd -g ${USER_GID} ${USERNAME} \
     && useradd -l -u ${USER_UID} -g ${USER_GID} --create-home -m -s /bin/bash -G sudo,adm,dialout,dip,plugdev,video ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     mkdir -p \
-    /home/${USERNAME}/.ccache \
-    /home/${USERNAME}/.colcon \
-    /home/${USERNAME}/.ros \
-    /home/${USERNAME}/.bash \
-    ${ER4_WS}
+        /home/${USERNAME}/.ccache \
+        /home/${USERNAME}/.colcon \
+        /home/${USERNAME}/.ros \
+        /home/${USERNAME}/.bash \
+        ${ER4_WS}/src \
+        ${ER4_WS}/build \
+        ${ER4_WS}/install \
+        ${ER4_WS}/log && \
+    chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
 # Setup the install directory and copy the workspace to it.
 # We could alternatively copy package manifests to preserve the layer cache if the build duration becomes too onerous.
+USER ${USERNAME}
 WORKDIR  ${ER4_WS}
-RUN mkdir src build install log
 
 # Copy package manifests for installing rosdeps
 COPY --chown=${USERNAME}:${USERNAME} --from=package-manifests /src/ ./src
@@ -100,63 +114,23 @@ RUN mv src/wilbur/wilbur_gz/package.xml src/wilbur/wilbur_gz/__package.xml
 # RUN sudo rosdep init && rosdep update --rosdistro ${ROS_DISTRO}
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    source /opt/ros/${ROS_DISTRO}/setup.bash && \
-    apt-get update && \
+    sudo apt update && \
+    . /opt/ros/${ROS_DISTRO}/setup.bash && \
     rosdep update && \
     rosdep install -iy --from-paths src
 
 # Install extra ROS deps
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && \
-    apt-get install -q -y \
+    sudo apt-get update && \
+    sudo apt-get install -q -y \
     ros-${ROS_DISTRO}-ros2controlcli \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
-    python3-virtualenv
-
-# Configure and install MuJoCo using the defaults for the MuJoCo drivers.
-# We use MuJoCo in many systems so we just install the drivers in the base workspace.
-# The install is CPU dependent, this works with `x86_64` and `arm64` chips, TBD on others.
-ARG MUJOCO_VERSION=3.3.4
-ENV MUJOCO_VERSION=${MUJOCO_VERSION}
-ENV MUJOCO_DIR="/opt/mujoco/mujoco-${MUJOCO_VERSION}"
-RUN mkdir -p ${MUJOCO_DIR} && sudo chown -R ${USERNAME}:${USERNAME} ${MUJOCO_DIR}
-RUN CPU_ARCH=$(uname -m); \
-    wget https://github.com/google-deepmind/mujoco/releases/download/${MUJOCO_VERSION}/mujoco-${MUJOCO_VERSION}-linux-${CPU_ARCH}.tar.gz && \
-    tar -xzf "mujoco-${MUJOCO_VERSION}-linux-${CPU_ARCH}.tar.gz" -C $(dirname "${MUJOCO_DIR}") && \
-    rm "mujoco-${MUJOCO_VERSION}-linux-${CPU_ARCH}.tar.gz"
+    ros-${ROS_DISTRO}-plotjuggler-ros
 
 # Copy in the remainder of the src directory
-COPY src/ src/
-RUN chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
-
-ENV VENV=/home/${USERNAME}/colcon_venv
-USER ${USERNAME}
-# Starting with python 3.11, pip installs need to go into a python virtualenv
-# The setup here is based on the ROS2 docs at
-# https://docs.ros.org/en/jazzy/How-To-Guides/Using-Python-Packages.html
-# The python virtualenv will be based at ~/colcon_venv. 
-# We'll set up the bashrc to use it. We want the venv to be sourced
-# first, before sourcing the ROS workspace.
-RUN mkdir -p ${VENV}/src \
-    && cd ${VENV} \
-    && virtualenv -p python3 --system-site-packages ./venv \
-    && touch ./venv/COLCON_IGNORE \
-    && echo 'source ${VENV}/venv/bin/activate' >> /home/${USERNAME}/.bashrc
-
-# Install MuJoCo specific pip dependencies
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    source ${VENV}/venv/bin/activate \
-    && pip install mujoco obj2mjcf
-
-# There's no build for arm64 on linux, so just ignore failures here if that's the case
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    source ${VENV}/venv/bin/activate \
-    && pip install bpy==4.0.0 --extra-index-url https://download.blender.org/pypi/ || true
-
+COPY --chown=${USERNAME}:${USERNAME} src/ src/
 
 # Setup colcon default mixins and add default settings
 RUN colcon mixin add default \
@@ -176,7 +150,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # For Gazebo fortress model files
 ENV IGN_GAZEBO_RESOURCE_PATH=/opt/ros/${ROS_DISTRO}/share
 
-# Setup entrypoint
 # copy in configs for different features
 COPY --chown=${USERNAME}:${USERNAME} config/colcon-defaults.yaml /home/${USERNAME}/.colcon/defaults.yaml
 COPY --chown=${USERNAME}:${USERNAME} config/terminator_config /home/${USERNAME}/.config/terminator/config
@@ -190,7 +163,7 @@ RUN echo "PS1=\"${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Images built in CI will have the default UID of 1000. For deployment, we'd like the user in the 
+# Images built in CI will have the default UID of 1000. For deployment, we'd like the user in the
 # container to match the host user. This requires customizing the setup above.
 FROM er4-dev-base AS er4-dev
 ARG USERNAME
@@ -229,3 +202,23 @@ ARG USERNAME
 
 RUN . /opt/ros/${ROS_DISTRO}/setup.bash && \
     colcon build
+
+FROM ${ROS_WS_BASE_IMAGE} AS er4-demo
+
+ARG USERNAME
+ARG USER_UID
+ARG USER_GID
+
+USER root
+
+RUN OLD_UID=$(id -u ${USERNAME}) && \
+    OLD_GID=$(id -g ${USERNAME}) && \
+    if [ "${OLD_UID}" != "${USER_UID}" ] || [ "${OLD_GID}" != "${USER_GID}" ]; then \
+        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:[^:]*:/\1${USER_UID}:${USER_GID}:/" /etc/passwd && \
+        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:/\1${USER_GID}:/" /etc/group && \
+        find /home/${USERNAME} \
+            \( -user ${OLD_UID} -o -group ${OLD_GID} \) \
+            -print0 | xargs -0 -P $(nproc) -n 1000 chown ${USER_UID}:${USER_GID}; \
+    fi
+
+USER ${USERNAME}
