@@ -179,7 +179,7 @@ USER root
 #
 # Additionally, Usermod does some weird shenanigans trying to change the whole host system.
 # Weonly care about the users home directory, so to speed things up, just change the passwd
-# and groups manaully then update the user. Further, we parallize execution of the chown
+# and groups manually then update the user. Further, we parallelize execution of the chown
 # to speed that up on host machines. Ultimate this isn't critical, because we mount the
 # workspace over the source. But it is simpler and safer than piecemealing things as
 # needed, it is also significantly faster than `usermod`.
