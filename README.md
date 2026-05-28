@@ -124,19 +124,6 @@ ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:
 ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
 ```
 
-Run Wilbur with mujoco
-
-```bash
-# launch wilbur mujoco sim
-ros2 launch wilbur_mujoco_config wilbur_mujoco.launch.py
-
-# this is setup to use if a ps4 controller is connected to your linux device
-ros2 launch wilbur_deploy teleop.launch.py use_sim_time:=true
-
-# I know its not sim_ignition, just how flags were for now...
-ros2 launch wilbur_moveit_config wilbur_moveit.launch.py sim_ignition:=true
-```
-
 *NOTE:* Ogre2 rendering may have issues in VMs on mac for Gazebo.
 This can be addressed either by changing the rendering (hard) or just by running with software:
 
@@ -152,7 +139,7 @@ For more information refer to the [wilbur_deploy README](src/wilbur/wilbur_deplo
 ## The Pixi Workflow
 
 > [!WARNING] This is not supported at the moment.
-> This will not work with Clearpath Debians until it is fixed.
+> This will not work with Clearpath packages until it is fixed.
 
 We also provide a [pixi/robostack](https://prefix.dev) build for compiling on baremetal in consistent, isolated environments.
 Be sure to install the latest (after 0.65.0) release of the tool.
