@@ -1,3 +1,6 @@
+# User .env
+.env
+
 # Build content
 build/*
 install/*
@@ -9,3 +12,7 @@ log/*
 
 # VS code content
 .vscode/
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
