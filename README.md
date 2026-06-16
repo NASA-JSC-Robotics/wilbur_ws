@@ -4,20 +4,29 @@ Workspace for containerized development with the WilbUR robot (Warthog and UR10e
 
 ## Quick Development Setup
 
-> [!WARNING]
-> When forking this repo be sure to update the default prefix and image names.
-> This includes what is in `.env.default` and at the top of the Dockerfile.
-> The workspace is configured to pull demo images from our internal GitLab by default,
-> but this is likely not what every workspace wants!
-
-> [!WARNING] These warnings should not be in forks!
-> If you see them then you did a bad merge and you should double check your workspace.
-
 1) [Install Docker](https://docs.docker.com/engine/install/ubuntu/)
     - Don't worry about Docker Desktop
     - For Ubuntu recommend using the [utility script](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script)
 
-2) Fork or copy the contents of this repository as needed
+2) Fork or copy the contents of this repository as needed.
+NASA internal users should refer to confluence for how to setup authentication to GitHub.
+
+    **_NOTE:_**  This repository uses LFS for mesh file storage, be sure it is installed with:
+
+    ```bash
+    sudo apt-get install git-lfs
+    ```
+
+    Then,
+
+    ```bash
+    # Clone with submodules
+    git clone --recursive https://github.com/NASA-JSC-Robotics/wilbur_ws.git
+
+    # Or initialize them from the repo's root
+    cd wilbur_ws
+    git submodule update --init --recursive
+    ```
 
 3) Copy `.env.default` in the root of this repo to a new file named just `.env`
 
@@ -37,25 +46,6 @@ Workspace for containerized development with the WilbUR robot (Warthog and UR10e
     Alternatively, edit the contents of the newly created `.env`.
 
 Then follow the instructions below to build and run the application.
-
-## Using the Demo Image
-
-The demo image is based of pre-built images that are pushed to [DockerHub](https://hub.docker.com/r/nasajscrobotics/).
-
-These images contain the fully compiled workspace and can be run out of the box.
-
-To build and launch the demo image, from the workspace root run:
-
-```bash
-# Compile (pull) the image
-docker compose build
-
-# Start the demo service in the background
-docker compose up -d demo
-
-# Launch a bash session in the container
-docker compose exec demo bash
-```
 
 ## Using the Development Image
 
@@ -91,50 +81,10 @@ source install/setup.bash
 
 Once the workspace is built and sourced within the container, ROS 2 executables and launch files can be run.
 
-## Running Wilbury things
+## Running WilbUR Examples
 
-To run Wilbur with `mock_hardware` and a single controller manager:
-
-```bash
-# Launches the mock hardware simulated controller interface
-ros2 launch wilbur_deploy control_mock_hardware.launch.py
-
-# Starts moveit and opens and rviz window for planning and execution
-ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
-```
-
-For the LUCCI demonstration, we can split the controller managers and run one for the warthog and one for the UR.
-This allows us to launch controller managers in a potentially distributed manner on multiple PCs.
-This is to test running the HSPC as the control computer for either robot.
-
-Note that in this case, you must change the controller name in `wilbur_moveit_config/config/moveit_controllers.yaml` from `joint_trajectory_controller` to `/ur/joint_trajectory_controller` for moveit to execute plans in this version.
-This is because we are still including UR launch files, which do not support spawning controllers in the way we need to.
-
-To run Wilbur with `mock_hardware` and one controller manager for the warthog and one controller manager for the UR:
-
-```bash
-# Launches the warthog only
-ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true
-
-# Launches the namespace UR only
-ros2 launch wilbur_deploy control_mock_hardware.launch.py separate_controls_pcs:=true launch_ur:=true
-
-# Starts moveit and opens and rviz window for planning and execution
-# NOTE: Refer to the README in wilbur_deploy for any caveats here, this may not work out of the box.
-ros2 launch wilbur_moveit_config wilbur_moveit.launch.py
-```
-
-*NOTE:* Ogre2 rendering may have issues in VMs on mac for Gazebo.
-This can be addressed either by changing the rendering (hard) or just by running with software:
-
-```bash
-# Use CPU for rendering, it might be slow but it should work
-LIBGL_ALWAYS_SOFTWARE=1 ros2 launch wilbur_gz sim_gz.launch.py
-```
-
-## Launching the Wilbur Simulations
-
-For more information refer to the [wilbur_deploy README](src/wilbur/wilbur_deploy/README.md).
+> [!WARNING] This workspace is a work in progress.
+> For now refer to the [WilbUR documentation](src/wilbur/README.md) for more information.
 
 ## The Pixi Workflow
 
@@ -166,7 +116,7 @@ colcon build
 
 Note that any package we are building from source must be included in [pixi.toml](./pixi.toml).
 
-## Other Things to Note
+## Important Notes
 
 - Build logs, compiled artifaces, and the `.ccache` are also mounted in the workspace/user home.
 This ensure artifacts are persisted even when restarting or recreating the container.
@@ -187,3 +137,21 @@ Please refer to the [troubleshooting guide](./docs/TROUBLESHOOTING.md#slow-rende
 ## Troubleshooting
 
 Common pitfalls and troubleshooting tips are documented in the [troubleshooting guide](./docs/TROUBLESHOOTING.md).
+
+## Citation
+
+This project falls under the purview of the iMETRO project.
+If you use this in your own work, please cite the following paper:
+
+```bibtex
+@INPROCEEDINGS{imetro-facility-2025,
+  author={Dunkelberger, Nathan and Sheetz, Emily and Rainen, Connor and Graf, Jodi and Hart, Nikki and Zemler, Emma and Azimi, Shaun},
+  booktitle={2025 22nd International Conference on Ubiquitous Robots (UR)},
+  title={Design of the iMETRO Facility: A Platform for Intravehicular Space Robotics Research},
+  year={2025},
+  volume={},
+  number={},
+  pages={390-397},
+  keywords={NASA;Moon;Seals;Maintenance engineering;Maintenance;Robots;Standards;Open source software;Testing;Logistics},
+  doi={10.1109/UR65550.2025.11077983}}
+```
