@@ -4,7 +4,7 @@ ARG ROS_DISTRO=jazzy
 # The base image for the overlay deployment
 # These must be overridden from the local .env if using this workflow.
 ARG ROS_WS_BASE_IMAGE_TAG="jazzy-devel"
-ARG ROS_WS_BASE_IMAGE="js-er-code.jsc.nasa.gov:5005/imetro/robots/wilbur/wilbur_ws"
+ARG ROS_WS_BASE_IMAGE="nasajscrobotics/wilbur_ws"
 ARG ROS_WS_BASE_IMAGE="${ROS_WS_BASE_IMAGE}:${ROS_WS_BASE_IMAGE_TAG}"
 
 # This layer grabs package manifests from the src directory for preserving rosdep installs.
