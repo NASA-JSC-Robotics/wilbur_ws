@@ -47,6 +47,30 @@ NASA internal users should refer to confluence for how to setup authentication t
 
 Then follow the instructions below to build and run the application.
 
+## Using the Demo Image
+
+The demo image is based of pre-built images that are pushed to [DockerHub](https://hub.docker.com/r/nasajscrobotics/wilbur_ws).
+
+These images contain the fully compiled workspace and can be run out of the box.
+
+To build and launch the demo image, be sure to set the correct tag in your local `.env`.
+The from the workspace root run:
+
+```bash
+# Compile (pull) the image
+docker compose build
+
+# Start the demo service in the background
+docker compose up demo
+
+# Launch a bash session in the container
+docker compose exec demo bash
+```
+
+The demo container will source the installed environment, and can be used to launch pre-compiled applications.
+
+> [!NOTE] This is still a work in progress, bugs will exist.
+
 ## Using the Development Image
 
 The development image is built locally starting from a baseline `ros:jazzy` image.

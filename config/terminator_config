@@ -5,7 +5,7 @@
   broadcast_all = <Alt>a
 [profiles]
   [[default]]
-    background_color = "#00042a"
+    background_color = "#621708"
     cursor_color = "#aaaaaa"
     scrollback_infinite = True
 [layouts]
