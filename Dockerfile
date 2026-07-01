@@ -87,14 +87,14 @@ RUN groupadd -g ${USER_GID} ${USERNAME} \
     && useradd -l -u ${USER_UID} -g ${USER_GID} --create-home -m -s /bin/bash -G sudo,adm,dialout,dip,plugdev,video ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     mkdir -p \
-        /home/${USERNAME}/.ccache \
-        /home/${USERNAME}/.colcon \
-        /home/${USERNAME}/.ros \
-        /home/${USERNAME}/.bash \
-        ${ER4_WS}/src \
-        ${ER4_WS}/build \
-        ${ER4_WS}/install \
-        ${ER4_WS}/log && \
+    /home/${USERNAME}/.ccache \
+    /home/${USERNAME}/.colcon \
+    /home/${USERNAME}/.ros \
+    /home/${USERNAME}/.bash \
+    ${ER4_WS}/src \
+    ${ER4_WS}/build \
+    ${ER4_WS}/install \
+    ${ER4_WS}/log && \
     chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
 # Setup the install directory and copy the workspace to it.
@@ -127,6 +127,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
     ros-${ROS_DISTRO}-plotjuggler-ros
+
+# Install nanobind from pip rather than rosdep, and include additional deps for the mujoco conversion process.
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    pip3 install nanobind mujoco==3.4.0 obj2mjcf trimesh pycollada
 
 # Copy in the remainder of the src directory
 COPY --chown=${USERNAME}:${USERNAME} src/ src/
@@ -181,11 +187,11 @@ USER root
 RUN OLD_UID=$(id -u ${USERNAME}) && \
     OLD_GID=$(id -g ${USERNAME}) && \
     if [ "${OLD_UID}" != "${USER_UID}" ] || [ "${OLD_GID}" != "${USER_GID}" ]; then \
-        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:[^:]*:/\1${USER_UID}:${USER_GID}:/" /etc/passwd && \
-        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:/\1${USER_GID}:/" /etc/group && \
-        find /home/${USERNAME} \
-            \( -user ${OLD_UID} -o -group ${OLD_GID} \) \
-            -print0 | xargs -0 -P $(nproc) -n 1000 chown ${USER_UID}:${USER_GID}; \
+    sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:[^:]*:/\1${USER_UID}:${USER_GID}:/" /etc/passwd && \
+    sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:/\1${USER_GID}:/" /etc/group && \
+    find /home/${USERNAME} \
+    \( -user ${OLD_UID} -o -group ${OLD_GID} \) \
+    -print0 | xargs -0 -P $(nproc) -n 1000 chown ${USER_UID}:${USER_GID}; \
     fi
 
 USER ${USERNAME}
