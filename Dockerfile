@@ -87,14 +87,14 @@ RUN groupadd -g ${USER_GID} ${USERNAME} \
     && useradd -l -u ${USER_UID} -g ${USER_GID} --create-home -m -s /bin/bash -G sudo,adm,dialout,dip,plugdev,video ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     mkdir -p \
-        /home/${USERNAME}/.ccache \
-        /home/${USERNAME}/.colcon \
-        /home/${USERNAME}/.ros \
-        /home/${USERNAME}/.bash \
-        ${ER4_WS}/src \
-        ${ER4_WS}/build \
-        ${ER4_WS}/install \
-        ${ER4_WS}/log && \
+    /home/${USERNAME}/.ccache \
+    /home/${USERNAME}/.colcon \
+    /home/${USERNAME}/.ros \
+    /home/${USERNAME}/.bash \
+    ${ER4_WS}/src \
+    ${ER4_WS}/build \
+    ${ER4_WS}/install \
+    ${ER4_WS}/log && \
     chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
 # Setup the install directory and copy the workspace to it.
@@ -128,6 +128,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
     ros-${ROS_DISTRO}-plotjuggler-ros
 
+# Install nanobind from pip rather than rosdep, and include additional deps for the mujoco conversion process.
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    pip3 install nanobind mujoco==3.5.0 obj2mjcf trimesh pycollada
+
 # Copy in the remainder of the src directory
 COPY --chown=${USERNAME}:${USERNAME} src/ src/
 
@@ -160,6 +166,21 @@ RUN echo "source /entrypoint.sh" >> ~/.bashrc
 # Make it obvious when operating in a container
 RUN echo "PS1=\"${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\](docker):\[\033[01;34m\]\w\[\033[00m\]\$ \"" >> ~/.bashrc
 
+# Added to support headless accelerated rendering in the container. For more information see
+# https://bender.jsc.nasa.gov/confluence/spaces/~eholum/pages/325397633/Graphics+Acceleration+with+FastX
+# Add additional logic to make sure we clone the correct version for our CPU.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    sudo apt-get -y update && \
+    sudo apt-get install -q -y --no-install-recommends \
+        libxv1 \
+        libglu1-mesa \
+        libegl1
+RUN ARCH=$(dpkg --print-architecture); \
+    wget https://github.com/VirtualGL/virtualgl/releases/download/3.1.3/virtualgl_3.1.3_${ARCH}.deb && \
+    sudo dpkg -i virtualgl_3.1.3_${ARCH}.deb && \
+    rm virtualgl_3.1.3_${ARCH}.deb
+
 ENTRYPOINT ["/entrypoint.sh"]
 
 # Source built dev image for automated testing.
@@ -181,11 +202,11 @@ USER root
 RUN OLD_UID=$(id -u ${USERNAME}) && \
     OLD_GID=$(id -g ${USERNAME}) && \
     if [ "${OLD_UID}" != "${USER_UID}" ] || [ "${OLD_GID}" != "${USER_GID}" ]; then \
-        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:[^:]*:/\1${USER_UID}:${USER_GID}:/" /etc/passwd && \
-        sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:/\1${USER_GID}:/" /etc/group && \
-        find /home/${USERNAME} \
-            \( -user ${OLD_UID} -o -group ${OLD_GID} \) \
-            -print0 | xargs -0 -P $(nproc) -n 1000 chown ${USER_UID}:${USER_GID}; \
+    sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:[^:]*:/\1${USER_UID}:${USER_GID}:/" /etc/passwd && \
+    sed -i "s/^\(${USERNAME}:[^:]*:\)[^:]*:/\1${USER_GID}:/" /etc/group && \
+    find /home/${USERNAME} \
+    \( -user ${OLD_UID} -o -group ${OLD_GID} \) \
+    -print0 | xargs -0 -P $(nproc) -n 1000 chown ${USER_UID}:${USER_GID}; \
     fi
 
 USER ${USERNAME}
