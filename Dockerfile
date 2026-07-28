@@ -132,7 +132,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    pip3 install nanobind mujoco==3.4.0 obj2mjcf trimesh pycollada
+    pip3 install nanobind mujoco==3.5.0 obj2mjcf trimesh pycollada
 
 # Copy in the remainder of the src directory
 COPY --chown=${USERNAME}:${USERNAME} src/ src/
@@ -165,6 +165,21 @@ RUN echo "source /entrypoint.sh" >> ~/.bashrc
 
 # Make it obvious when operating in a container
 RUN echo "PS1=\"${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\](docker):\[\033[01;34m\]\w\[\033[00m\]\$ \"" >> ~/.bashrc
+
+# Added to support headless accelerated rendering in the container. For more information see
+# https://bender.jsc.nasa.gov/confluence/spaces/~eholum/pages/325397633/Graphics+Acceleration+with+FastX
+# Add additional logic to make sure we clone the correct version for our CPU.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    sudo apt-get -y update && \
+    sudo apt-get install -q -y --no-install-recommends \
+        libxv1 \
+        libglu1-mesa \
+        libegl1
+RUN ARCH=$(dpkg --print-architecture); \
+    wget https://github.com/VirtualGL/virtualgl/releases/download/3.1.3/virtualgl_3.1.3_${ARCH}.deb && \
+    sudo dpkg -i virtualgl_3.1.3_${ARCH}.deb && \
+    rm virtualgl_3.1.3_${ARCH}.deb
 
 ENTRYPOINT ["/entrypoint.sh"]
 
