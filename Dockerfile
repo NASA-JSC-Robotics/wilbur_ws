@@ -73,6 +73,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ros-${ROS_DISTRO}-rqt-srv \
     ros-${ROS_DISTRO}-rqt-tf-tree \
     ros-${ROS_DISTRO}-desktop \
+    ros-${ROS_DISTRO}-depthai-ros-v3 \
     software-properties-common \
     terminator \
     tmux \
