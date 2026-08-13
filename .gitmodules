@@ -10,3 +10,7 @@
 [submodule "src/external/serial"]
 	path = src/external/serial
 	url = https://github.com/tylerjw/serial.git
+[submodule "src/external/vectornav"]
+	path = src/external/vectornav
+	url = https://github.com/dawonn/vectornav.git
+	branch = ros2
