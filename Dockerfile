@@ -166,6 +166,9 @@ RUN echo "source /entrypoint.sh" >> ~/.bashrc
 # Make it obvious when operating in a container
 RUN echo "PS1=\"${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\](docker):\[\033[01;34m\]\w\[\033[00m\]\$ \"" >> ~/.bashrc
 
+# Modify for MuJoCo
+RUN sudo chmod a+rwx /opt/ros/jazzy/opt/mujoco_vendor/bin/mujoco_plugin/
+
 # Added to support headless accelerated rendering in the container. For more information see
 # https://bender.jsc.nasa.gov/confluence/spaces/~eholum/pages/325397633/Graphics+Acceleration+with+FastX
 # Add additional logic to make sure we clone the correct version for our CPU.
