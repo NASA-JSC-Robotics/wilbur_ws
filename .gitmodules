@@ -10,3 +10,6 @@
 [submodule "src/external/serial"]
 	path = src/external/serial
 	url = https://github.com/tylerjw/serial.git
+[submodule "src/external/mujoco_ros2_control"]
+	path = src/external/mujoco_ros2_control
+	url = https://github.com/ros-controls/mujoco_ros2_control.git

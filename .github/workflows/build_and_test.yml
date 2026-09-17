@@ -60,7 +60,8 @@ jobs:
           docker run --rm \
             ${{ steps.meta.outputs.tags }} \
             bash -c "
-              colcon test &&
+              # Just test our things
+              colcon test --paths src/wilbur/* &&
               colcon test-result --verbose
             "
 
