@@ -105,6 +105,12 @@ WORKDIR  ${ER4_WS}
 # Copy package manifests for installing rosdeps
 COPY --chown=${USERNAME}:${USERNAME} --from=package-manifests /src/ ./src
 
+# Add Clearpath's apt repo and rosdep rules
+RUN wget https://packages.clearpathrobotics.com/public.key -O - | sudo apt-key add - \
+    && echo "deb https://packages.clearpathrobotics.com/stable/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/clearpath-latest.list \
+    && apt update \
+    && wget https://raw.githubusercontent.com/clearpathrobotics/public-rosdistro/master/rosdep/50-clearpath.list -O /etc/ros/rosdep/sources.list.d/50-clearpath.list
+
 # FIXME: Move wilbur's wilbur_gz out of the way because the gazebo deps don't work on jazzy
 RUN mv src/wilbur/wilbur_gz/package.xml src/wilbur/wilbur_gz/__package.xml
 
@@ -126,7 +132,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ros-${ROS_DISTRO}-ros2controlcli \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
-    ros-${ROS_DISTRO}-plotjuggler-ros
+    ros-${ROS_DISTRO}-plotjuggler-ros \
+    ros-${ROS_DISTRO}-valence-bms-driver
 
 # Copy in the remainder of the src directory
 COPY --chown=${USERNAME}:${USERNAME} src/ src/
